@@ -4,6 +4,8 @@ Interactive, local sample-data prototype for Church Sound Operator. No mixer com
 
 ## Run on Windows or macOS
 
+See [Qu-24 church hardware setup](../QU24_SETUP.md) for the network layout, setup checklist, safety checks, and the distinction between this UI preview and future live control.
+
 Install Node.js meeting the version in package.json (>=22.13), then from this folder:
 
 ```sh

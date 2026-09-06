@@ -6,6 +6,8 @@ Sunday Sound is a local, landscape-first web interface prototype for a church Al
 
 ## Start
 
+For church networking, the iPad/laptop setup, and the future real-mixer commissioning checklist, read [Qu-24 hardware setup](QU24_SETUP.md). Hardware control is not implemented yet.
+
 Install Node.js 22.13 or newer, then:
 
 ```sh
