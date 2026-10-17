@@ -2,7 +2,7 @@
 
 Sunday Sound is a local, landscape-first web interface prototype for a church Allen & Heath Qu-24. Review it on a laptop or an iPad on the same trusted network.
 
-**UI only: no mixer connection, discovery, audio processing, or hardware commands are implemented.**
+**Android 0.6.0 pilot:** direct Qu-24 connection and bounded channel control are implemented and tested with a simulated mixer on the S23. Actual church hardware validation is still required. The browser prototype remains sample-data only. Automatic audio balancing is not implemented.
 
 ## Start
 
@@ -10,7 +10,7 @@ Sunday Sound is a local, landscape-first web interface prototype for a church Al
 
 The phone uses a simpler assistant home: Speaking, Worship, Together, More voice, Less music, request-based adjustments, and Mute all/Restore. Use Settings → Set up instruments & channels to enter and save your actual patch. The browser retains the original detailed mixer prototype.
 
-For church networking, the iPad/laptop setup, and the future real-mixer commissioning checklist, read [Qu-24 hardware setup](QU24_SETUP.md). Hardware control is not implemented yet.
+For tomorrow's Android test, read [Qu-24 church pilot and diagnostics](QU24_CHURCH_TEST.md). The separate [hardware setup guide](QU24_SETUP.md) retains the laptop/web network arrangement.
 
 Install Node.js 22.13 or newer, then:
 
@@ -22,7 +22,7 @@ npm run dev:logged
 
 Open the URL printed in the terminal. On an iPad, replace localhost with the laptop's LAN IP. Keep the laptop awake. Use only a trusted LAN; this development preview has no authentication.
 
-## Current workflow
+## Browser prototype workflow
 
 1. Start in Quick setup: assign display names, Qu channel numbers, and Quick mix groups.
 2. Save the layout on this browser, or export/import it to transfer to another device.

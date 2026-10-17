@@ -2,6 +2,8 @@
 
 ## October 2026 implementation direction
 
+Protocol pilot revision: Android now has direct TCP MIDI, Qu-24 identity/state synchronization, explicitly enabled bounded live input control, readback checks, and persistent/exportable native diagnostics. It has been exercised against a USB simulator on the S23, not the actual church mixer. See [the church pilot procedure](QU24_CHURCH_TEST.md). Auto balancing and voice activation still require a future audio/measurement path.
+
 Patch setup revision: Settings → Set up instruments & channels now lets the operator add/remove sources, name instruments, choose an instrument type and Speaking/Vocal/Instrument role, and assign mono channels or stereo inputs. Assignments are validated and saved on the phone. The assistant targets those assignments rather than hard-coded channel numbers. Speaking/Worship/Together use the saved roles; Together supports a pastor speaking while worship continues. All-channel mute remains independent of the patch.
 
 Phone UX revision: the Android app now starts with Speaking/Worship, More voice/Less music, a request-based assistant, Undo, and a persistent Mute all/Restore control. Minimize customization; move engineering details out of the primary volunteer experience. Mute all means channel mutes across all 24 mono inputs, 3 stereo inputs, and 4 FX returns, not output-master attenuation. Restore preserves the pre-mute state of every input. The current assistant uses bounded local request rules; listening-based speech activation and balance require a real audio feed and hardware validation. The full browser mixer UI is retained for reference.

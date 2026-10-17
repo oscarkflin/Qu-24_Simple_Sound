@@ -10,6 +10,7 @@
     "dev:logged": "node scripts/dev-logged.mjs",
     "dev:mobile": "vite --config vite.mobile.config.ts --host 127.0.0.1",
     "build:mobile": "vite build --config vite.mobile.config.ts",
+    "test:qu": "node --experimental-strip-types scripts/check-qu.mjs",
     "android:sync": "npm run build:mobile && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && node scripts/build-android.mjs",

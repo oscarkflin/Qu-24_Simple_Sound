@@ -1,10 +1,10 @@
 # Qu-24 church setup and first hardware test
 
-## Status: UI preview only
+## Current Android pilot
 
-An Android demo is also available: [Galaxy S23 setup](ANDROID_SETUP.md). Its UI is bundled in the APK and needs no laptop website host. The intended future Android control path is a native direct connection; the laptop bridge below describes the web option. Both currently use sample mixer data only.
+The Android app now includes a direct connection pilot. Read [Qu-24 Android church test and diagnostic reports](QU24_CHURCH_TEST.md) for the current procedure and verification limits. It needs no laptop website host. The remaining instructions below describe the web prototype and its proposed laptop bridge, not the Android implementation.
 
-This repository does **not yet connect to or discover a mixer**. Entering an IP address validates its format only. Faders, mutes, and other controls affect sample data, not the Qu-24. There is no bridge install command or live-mode switch yet.
+The browser UI still has no mixer bridge and validates IP format only. The Android pilot has read-only connection followed by explicitly enabled live control; actual church hardware validation remains pending.
 
 Sections 1–3 can be used now to prepare the church setup and review the UI. Section 4 is the acceptance checklist for a future bridge release, not instructions for a currently available feature.
 

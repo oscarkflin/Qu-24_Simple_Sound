@@ -1,4 +1,4 @@
-export const BUILD_ID = 'android-assistant-demo-0.5.0';
+export const BUILD_ID = 'android-qu-control-0.6.0';
 const KEY = 'sunday-sound.diagnostics.v1';
 export type LogEvent = {
   at: string;
@@ -28,8 +28,9 @@ export function logEvent(
   level: 'info' | 'error' = 'info',
 ) {
   if (typeof window === 'undefined') return;
+  initializeDiagnostics();
   events = [
-    ...events.slice(-299),
+    ...events.slice(-1999),
     { at: new Date().toISOString(), level, event, details },
   ];
   try {
@@ -39,7 +40,7 @@ export function logEvent(
   }
   window.dispatchEvent(new Event('sound-diagnostics'));
 }
-export function startDiagnostics() {
+function initializeDiagnostics() {
   if (!initialized) {
     try {
       const old = JSON.parse(localStorage.getItem(KEY) || '[]');
@@ -50,14 +51,19 @@ export function startDiagnostics() {
               x &&
               typeof x.at === 'string' &&
               typeof x.event === 'string' &&
-              ['info', 'error'].includes(x.level),
+              ['info', 'error'].includes(x.level) &&
+              x.details &&
+              typeof x.details === 'object',
           )
-          .slice(-250);
+          .slice(-1950);
     } catch {
       /* Ignore corrupt local logs. */
     }
     initialized = true;
   }
+}
+export function startDiagnostics() {
+  initializeDiagnostics();
   logEvent('session.started', { build: BUILD_ID });
   const error = (e: ErrorEvent) =>
     logEvent(
@@ -156,15 +162,21 @@ function scrubDetails(details: Record<string, unknown>) {
     ]),
   );
 }
-export function createReport(state: unknown, note: string) {
+export function createReport(
+  state: unknown,
+  note: string,
+  mode = 'ui-preview-no-mixer',
+) {
   return {
     schemaVersion: 1,
     build: BUILD_ID,
     createdAt: new Date().toISOString(),
-    mode: 'ui-preview-no-mixer',
+    mode,
     device: {
       userAgent: navigator.userAgent,
       language: navigator.language,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      utcOffsetMinutes: new Date().getTimezoneOffset(),
       viewport: { width: innerWidth, height: innerHeight },
       onlineHint: navigator.onLine,
     },

@@ -1,4 +1,4 @@
-export type Mode = 'speaking' | 'worship' | 'together';
+export type Mode = 'speaking' | 'worship' | 'together' | 'desk';
 export type Kind =
   | 'pastor'
   | 'vocal'
@@ -248,6 +248,7 @@ export function applyAction(mix: Mix, action: Action): Mix {
         }
       : mix;
   if (mix.beforeMute) return mix;
+  if(action.type==='mode'&&action.mode==='desk')return {...mix,mode:'desk'};
   if (action.type === 'mode')
     return {
       ...mix,
@@ -287,7 +288,7 @@ export function balanceIds(mix: Mix, group: 'voice' | 'music'): string[] {
           ? mix.mode === 'speaking'
             ? c.group === 'speech'
             : c.group === 'voice' ||
-              (mix.mode === 'together' && c.group === 'speech')
+              ((mix.mode === 'together'||mix.mode==='desk') && c.group === 'speech')
           : c.group === 'music'),
     )
     .map((c) => c.id);

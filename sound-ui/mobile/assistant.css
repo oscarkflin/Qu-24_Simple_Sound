@@ -9,6 +9,42 @@
   background: #141b1e;
   color: #f0f4ef;
 }
+.qu-connection {
+  padding: 18px;
+  border: 1px solid #4a6967;
+  background: #203332;
+  border-radius: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.qu-connection h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+}
+.qu-connection > p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.qu-trace-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  min-height: 44px;
+}
+.assistant-request textarea {
+  min-height: 90px;
+  background: #152125;
+  color: #e7f0eb;
+  border: 1px solid #587075;
+  border-radius: 9px;
+  padding: 12px;
+  font-size: 16px;
+  resize: vertical;
+}
 .assistant-modes .assistant-together {
   grid-column: 1/-1;
   display: flex;
