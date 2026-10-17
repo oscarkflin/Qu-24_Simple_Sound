@@ -1,10 +1,9 @@
 import { createRoot } from 'react-dom/client';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import Home from '../app/page';
+import SoundAssistant from './assistant';
 import { logEvent } from '../lib/diagnostics';
 import '../app/globals.css';
-import './phone.css';
 
 document.documentElement.dataset.platform = Capacitor.getPlatform();
 if (Capacitor.isNativePlatform()) {
@@ -23,4 +22,4 @@ if (Capacitor.isNativePlatform()) {
     else window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 }
-createRoot(document.getElementById('root')!).render(<Home />);
+createRoot(document.getElementById('root')!).render(<SoundAssistant />);

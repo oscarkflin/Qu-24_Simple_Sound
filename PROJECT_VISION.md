@@ -2,6 +2,8 @@
 
 ## October 2026 implementation direction
 
+Phone UX revision: the Android app now starts with Speaking/Worship, More voice/Less music, a request-based assistant, Undo, and a persistent Mute all/Restore control. Minimize customization; move engineering details out of the primary volunteer experience. Mute all means channel mutes across all 24 mono inputs, 3 stereo inputs, and 4 FX returns, not output-master attenuation. Restore preserves the pre-mute state of every input. The current assistant uses bounded local request rules; listening-based speech activation and balance require a real audio feed and hardware validation. The full browser mixer UI is retained for reference.
+
 The next delivery target is an Android app tested on a Samsung Galaxy S23. Reuse the existing React interface in a Capacitor shell, with bundled assets so the UI opens offline. Support portrait setup and landscape mixing. The first APK is a sample-data demo with local channel mapping and native layout/report sharing. Future direct Qu-24 control will use a native transport; it does not require the laptop bridge used by the web architecture. iPad/web support remains a later/shared-UI option. See [Android setup](ANDROID_SETUP.md).
 
 ## Product vision

@@ -1,6 +1,6 @@
 # Android demo — Galaxy S23
 
-The first Android build is **Sunday Sound Demo 0.3.0**, package `com.oscarkflin.sundaysound`. It bundles the interface inside the app and opens without a website host or Internet. All mixer controls still use sample data. Qu discovery and direct hardware control are planned, not included.
+The current Android build is **Sunday Sound Demo 0.4.0**, package `com.oscarkflin.sundaysound`. It bundles a simplified assistant interface inside the app and opens without a website host or Internet. All mixer controls still use sample data. Qu discovery and direct hardware control are planned, not included.
 
 ## Install the APK on your phone
 
@@ -10,19 +10,21 @@ The first Android build is **Sunday Sound Demo 0.3.0**, package `com.oscarkflin.
 
 This is a debug-signed test APK, not a Google Play release. Keep the same signing key for subsequent updates. Android Studio uses the development computer's local debug keystore; an APK from a different machine/CI may have a different key. Export your layout before uninstalling to resolve a signature mismatch, because uninstalling clears local settings.
 
-## What to try on the S23
+## What to try on the S23 — simplified assistant
 
-- Start in portrait. In Quick setup, enter a display name and channel number, save, close/reopen, and check the saved layout.
-- Try a repeated or out-of-range channel and confirm it is rejected.
-- Open Quick mix and use the two-column faders. Rotate to landscape for a wider mixing surface; scroll to see additional strips.
-- Try monitors, livestream, undo, mute confirmation, and English/Traditional Chinese.
-- Export a layout. Android opens its share sheet: choose an installed app that can save or transfer the JSON. Import uses Android's file picker; select the saved layout JSON, then Save layout to apply it.
-- Download a diagnostic report from **Bring the details back**. This also opens the native share sheet. Include the report when describing an issue here. Recent UI errors/actions are recorded; native Android crash traces are not automatically included.
-- Turn on airplane mode and reopen the app to confirm the bundled UI still opens. IP validation remains a format check only.
+- Start in portrait. Choose **Speaking** or **Worship**; the assistant switches the example input mute states without changing fader levels.
+- Tap **More voice** or **Less music** for a 1 dB adjustment to the active example channels. Undo restores the preceding adjustment.
+- Open **Help me balance**, then try “piano too loud” or “vocals too quiet.” The app previews one small channel adjustment before applying it. These are local request rules, not an LLM or audio analysis.
+- Tap **Mute all**: all 24 mono input channels, 3 stereo input channels, and 4 FX returns are muted in the model, including unused/unmapped inputs. Output masters are not moved. No other adjustment or mode switch is allowed until Restore.
+- Tap **Restore sound**, then restore or keep muted. Restore uses the exact pre-mute snapshot: already-muted channels stay muted, and repeated mute requests cannot overwrite the snapshot. This is a channel operation, not just an LR speaker mute.
+- Open the options icon for English/Traditional Chinese and **Share diagnostic report**. Android opens its share sheet. The report includes all modeled input states and recent actions; native Android crash traces are not automatically included.
+- Turn on airplane mode and reopen the app to confirm the bundled UI still opens. This version has no mixer connection or IP setup screen.
+
+Channel maps, monitor sliders, and setup tables are no longer on the phone's main surface. The earlier full mixer prototype remains available in the browser project. Phone requests about monitor mixes, EQ, multiple conflicting sources, or currently muted sources do not trigger a level change. Speech detection needs a suitable mixer audio feed and is not enabled in this build.
 
 The screen stays awake while this app's activity is visible. Rotation is allowed. Android Back closes a dialog where supported; otherwise it scrolls the current surface to the top. Home leaves the app normally.
 
-Saved layouts and recent UI events are local to the app's WebView storage. Browser and app profiles are separate. Export is the transfer/backup mechanism; OS backup is disabled for this demo. Mixer fader state remains temporary sample state and resets when the UI reloads.
+The earlier saved layout remains in the app's WebView storage when updating in place, but the simplified phone demo uses a fixed example patch and does not edit that layout. Recent UI events remain local; OS backup is disabled. Mixer state and the Restore snapshot are temporary demo state and reset when the UI reloads. A future live app must read current console state on startup rather than initialize the console from these demo values.
 
 ## Build on Windows or macOS
 
@@ -65,7 +67,7 @@ For native crashes, Android Studio Logcat can filter the app package. Review log
 
 ## Verification and remaining work
 
-Implementation checks: Android debug compilation, standalone web bundle, TypeScript, existing mapping/redaction checks, and browser-based phone-size interaction checks. Actual S23 installation, system bars/keyboard behavior, file picker, native sharing, and suspend/resume need a physical-device test. No phone was attached during implementation.
+Implementation checks: Android debug compilation, standalone web bundle, TypeScript, mute/restore/suggestion model checks, and browser-based phone-size interaction checks. Version 0.4.0 was installed and launched over USB on the connected Galaxy S23. Native sharing, suspend/resume, and hands-on comfort still need user review.
 
 The dependency audit also reports advisories in the existing web/server/toolchain dependency tree. This change does not upgrade that whole stack. The Android bundle excludes the server runtime; a production release still needs dependency review and release signing.
 
