@@ -94,7 +94,7 @@ export default function Home() {
     setStorageReady(true);
     return cleanup;
   },[]);
-  useEffect(()=>{logEvent('screen.opened',{screen:tab});},[tab]);
+  useEffect(()=>{window.scrollTo({top:0,left:0,behavior:'instant'});logEvent('screen.opened',{screen:tab});},[tab]);
   const saveProfile=(p:Profile)=>{
     setProfile(p);
     try{localStorage.setItem(PROFILE_KEY,JSON.stringify(p));setStorageWarning('');}

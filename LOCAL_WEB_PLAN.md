@@ -1,6 +1,6 @@
 # Local Web App Plan
 
-Status: landscape UI prototype now implemented in `sound-ui/` for local review. Hardware integration, production hosting, and GitHub publication remain future work. See [prototype instructions](sound-ui/README.md).
+Status: web UI prototype implemented in `sound-ui/` and published to GitHub. Android/Galaxy S23 is now the immediate delivery target; see [Android setup](ANDROID_SETUP.md). This document retains the laptop-hosted web architecture for later use. Hardware integration and production hosting remain future work.
 
 ## Recommendation
 

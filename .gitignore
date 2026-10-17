@@ -1,3 +1,4 @@
 /PTZController/
 *.log
 .DS_Store
+/.android-tools/

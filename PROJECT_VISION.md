@@ -1,5 +1,9 @@
 # Church Sound Operator
 
+## October 2026 implementation direction
+
+The next delivery target is an Android app tested on a Samsung Galaxy S23. Reuse the existing React interface in a Capacitor shell, with bundled assets so the UI opens offline. Support portrait setup and landscape mixing. The first APK is a sample-data demo with local channel mapping and native layout/report sharing. Future direct Qu-24 control will use a native transport; it does not require the laptop bridge used by the web architecture. iPad/web support remains a later/shared-UI option. See [Android setup](ANDROID_SETUP.md).
+
 ## Product vision
 
 Church Sound Operator is an iPad-first assistant for church sound volunteers using an Allen & Heath Qu-24. It does not replace the mixer or attempt to make every volunteer an audio engineer. Instead, it turns technical mixer operations into a simple, safe, church-service workflow.

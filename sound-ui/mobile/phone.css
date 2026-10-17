@@ -1,0 +1,240 @@
+/* Bundled Android client: portrait setup and landscape mixing on Galaxy S23. */
+html,
+body,
+#root {
+  min-height: 100%;
+  width: 100%;
+  overflow-x: clip;
+}
+.sound-app {
+  padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.topbar {
+  padding-top: env(safe-area-inset-top);
+}
+.bottom-bar {
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+.sound-dialog {
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+.file-status {
+  margin-top: 16px;
+  padding: 14px;
+  background: #263d32;
+  border-radius: 10px;
+  font-size: 14px;
+}
+@media (max-width: 600px) {
+  .topbar,
+  .sound-app:has(.setup-grid) .topbar {
+    height: auto;
+    min-height: 76px;
+    padding: 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-size: 18px;
+  }
+  .brand-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .brand div > span {
+    font-size: 10px;
+  }
+  .top-status {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    font-size: 13px;
+  }
+  .language-button {
+    margin-left: auto;
+  }
+  .workspace {
+    padding: 20px 14px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .page-heading h1,
+  .setup-heading h1 {
+    font-size: 26px !important;
+  }
+  .eyebrow {
+    font-size: 11px;
+  }
+  .mapping-title {
+    align-items: flex-start;
+  }
+  .mapping-title p {
+    font-size: 14px;
+  }
+  .mapping-table,
+  .mapping-table tbody {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+  .mapping-table thead {
+    display: none;
+  }
+  .mapping-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 16px;
+    border-bottom: 1px solid #405055;
+  }
+  .mapping-table td {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border: 0;
+    padding: 0 !important;
+    min-width: 0;
+    gap: 6px;
+  }
+  .mapping-table td:first-child {
+    grid-column: 1/-1;
+    flex-direction: row;
+    align-items: center;
+    font-weight: 600;
+  }
+  .mapping-table td:nth-child(2) {
+    grid-column: 1/-1;
+  }
+  .mapping-table td:nth-child(2)::before {
+    content: 'Display name / 顯示名稱';
+    color: #a4b4b8;
+    font-size: 12px;
+  }
+  .mapping-table td:nth-child(3)::before {
+    content: 'Qu channels / 通道';
+    color: #a4b4b8;
+    font-size: 12px;
+  }
+  .mapping-table td:nth-child(4)::before {
+    content: 'Mix tab / 分頁';
+    color: #a4b4b8;
+    font-size: 12px;
+  }
+  .mapping-table input {
+    max-width: none;
+    min-height: 48px;
+    font-size: 16px;
+  }
+  .channel-input {
+    max-width: none;
+  }
+  .mapping-table [data-slot='select-trigger'] {
+    min-width: 0;
+    min-height: 48px;
+  }
+  .setup-aside {
+    display: flex;
+  }
+  .mapping-footer .primary {
+    width: 100%;
+  }
+  .bottom-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .navigation[data-slot='tabs-list'] {
+    width: 100%;
+    justify-content: space-around;
+    gap: 0;
+    min-width: 0;
+  }
+  .navigation [data-slot='tabs-trigger'] {
+    padding: 7px 3px;
+    min-width: 0;
+    flex: 1;
+    font-size: 11px;
+    min-height: 49px;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .navigation [data-slot='tabs-trigger'] svg {
+    width: 18px;
+    height: 18px;
+  }
+  .undo-button {
+    margin-left: auto;
+    min-height: 36px;
+  }
+  .mix-filters[data-slot='tabs-list'] {
+    display: flex;
+    width: 100%;
+    height: auto !important;
+  }
+  .mix-filters [data-slot='tabs-trigger'] {
+    padding: 10px 6px;
+    flex: 1;
+    font-size: 13px;
+  }
+  .fader-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .fader-card {
+    padding: 16px 10px;
+  }
+  .fader-card h3 {
+    font-size: 16px;
+  }
+  .connection-panel {
+    padding: 16px;
+  }
+  .connection-panel label {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .connection-panel .secondary {
+    width: 100%;
+  }
+  .report-meta {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sound-dialog {
+    padding: 22px !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .workspace {
+    padding-top: 18px;
+  }
+  .topbar,
+  .sound-app:has(.setup-grid) .topbar {
+    height: 60px;
+    min-height: 60px;
+  }
+  .fader-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .fader-card .vertical-control {
+    height: 130px;
+  }
+  .bottom-bar {
+    padding-top: 5px;
+  }
+  .page-heading {
+    margin-bottom: 16px;
+  }
+  .sound-dialog {
+    max-height: 90dvh;
+  }
+}

@@ -2,6 +2,8 @@
 
 ## Status: UI preview only
 
+An Android demo is also available: [Galaxy S23 setup](ANDROID_SETUP.md). Its UI is bundled in the APK and needs no laptop website host. The intended future Android control path is a native direct connection; the laptop bridge below describes the web option. Both currently use sample mixer data only.
+
 This repository does **not yet connect to or discover a mixer**. Entering an IP address validates its format only. Faders, mutes, and other controls affect sample data, not the Qu-24. There is no bridge install command or live-mode switch yet.
 
 Sections 1–3 can be used now to prepare the church setup and review the UI. Section 4 is the acceptance checklist for a future bridge release, not instructions for a currently available feature.
