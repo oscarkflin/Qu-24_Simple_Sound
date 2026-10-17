@@ -39,6 +39,7 @@ import {
 import { PatchEditor } from './patch-editor';
 import { QuSession, type ConnectionState } from '@/lib/qu-session';
 import { QuConnection } from './qu-connection';
+import { AutoBalanceControl } from './auto-balance';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   createReport,
@@ -253,7 +254,7 @@ export default function SoundAssistant() {
     if (!ids.length) return;
     act(
       { type: 'adjust', ids, delta },
-      `${group === 'voice' ? 'Voices' : 'Instruments'} ${delta > 0 ? 'raised' : 'lowered'} ${connection.phase==='live'?'about ':''}1 dB.`,
+      `${group === 'voice' ? 'Voices' : 'Instruments'} ${delta > 0 ? 'raised' : 'lowered'} ${connection.phase === 'live' ? 'about ' : ''}1 dB.`,
       `${group === 'voice' ? '人聲' : '樂器'}已${delta > 0 ? '提高' : '降低'} 1 dB。`,
     );
   };
@@ -378,6 +379,13 @@ export default function SoundAssistant() {
             </p>
           </div>
         </section>
+        <AutoBalanceControl
+          session={qu}
+          state={connection}
+          mix={mix}
+          savedPatch={savedPatch}
+          zh={zh}
+        />
         <div className="assistant-balance">
           <button
             disabled={muted || blocked || !balanceIds(mix, 'voice').length}
@@ -595,8 +603,8 @@ export default function SoundAssistant() {
               )}
               <p className="assistant-small">
                 {t(
-                  'This demo uses simple request rules. Voice listening and automatic balancing come later.',
-                  '此示範使用簡單需求規則，語音偵測與自動平衡將於後續提供。',
+                  'Requests use simple rules. Live Auto balance can maintain an approved mix using mixer meters; it does not listen to audio or detect voices.',
+                  '需求使用簡單規則。即時自動平衡可依混音器電平維持已確認的混音，不會聆聽音訊或偵測語音。',
                 )}
               </p>
             </>
@@ -696,8 +704,8 @@ export default function SoundAssistant() {
                 </p>
                 <p>
                   {t(
-                    'The assistant is not listening to audio yet. Modes and balance requests follow your channel assignments.',
-                    '助理尚未聆聽音訊。模式與平衡需求會依照您的通道配置運作。',
+                    'The assistant is not listening to audio. Modes, requests, and live meter-based Auto balance follow your channel assignments.',
+                    '助理不會聆聽音訊。模式、需求及即時電平自動平衡會依您的通道配置運作。',
                   )}
                 </p>
               </div>

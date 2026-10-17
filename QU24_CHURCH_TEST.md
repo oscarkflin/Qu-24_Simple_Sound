@@ -1,8 +1,8 @@
 # Qu-24 Android pilot: first church test and issue reports
 
-Build: **0.7.0-pilot**, Android app package `com.oscarkflin.sundaysound` (launcher name remains Sunday Sound Demo).
+Build: **0.8.0-pilot**, Android app package `com.oscarkflin.sundaysound` (launcher name remains Sunday Sound Demo).
 
-The app now includes a direct Android TCP MIDI connection, a Qu Classic protocol parser, state synchronization, bounded input-fader changes, channel mute/mode changes, and readback-checked Mute all/Restore/Undo. It starts in Demo mode. Automatic audio balancing and voice detection are not implemented.
+The app includes direct Android TCP MIDI, state synchronization, bounded input-fader changes, channel modes/mutes, readback-checked Mute all/Restore/Undo, and [experimental Auto balance](AUTO_BALANCE.md). Auto starts off, requires a 10-second meter check and explicit reference approval, and maintains levels rather than listening to audio. Voice detection is not implemented. Start the first real-desk test with manual control and observation only.
 
 **Verification boundary:** protocol tests and a USB-only simulated mixer test on the Galaxy S23 passed. The actual church Qu-24 and church Wi-Fi have not been tested. Treat tomorrow as the first supervised hardware test, before the service, with the physical desk available throughout.
 

@@ -2,7 +2,7 @@
 
 ## October 2026 implementation direction
 
-Protocol pilot revision: Android now has direct TCP MIDI, Qu-24 identity/state synchronization, explicitly enabled bounded live input control, readback checks, and persistent/exportable native diagnostics. It has been exercised against a USB simulator on the S23, not the actual church mixer. See [the church pilot procedure](QU24_CHURCH_TEST.md). Auto balancing and voice activation still require a future audio/measurement path.
+Protocol pilot revision: Android has direct TCP MIDI, Qu-24 identity/state synchronization, explicitly enabled bounded live input control, readback checks, and persistent/exportable native diagnostics. It has been exercised against a USB simulator on the S23, not the actual church mixer. See [the church pilot procedure](QU24_CHURCH_TEST.md). Calibrated meter-based level hold is now implemented; room-aware automatic mixing and voice activation still require a future audio/measurement path.
 
 Patch setup revision: Settings → Set up instruments & channels now lets the operator add/remove sources, name instruments, choose an instrument type and Speaking/Vocal/Instrument role, and assign mono channels or stereo inputs. Assignments are validated and saved on the phone. The assistant targets those assignments rather than hard-coded channel numbers. Speaking/Worship/Together use the saved roles; Together supports a pastor speaking while worship continues. All-channel mute remains independent of the patch.
 
@@ -11,6 +11,8 @@ Phone UX revision: the Android app now starts with Speaking/Worship, More voice/
 The next delivery target is an Android app tested on a Samsung Galaxy S23. Reuse the existing React interface in a Capacitor shell, with bundled assets so the UI opens offline. Support portrait setup and landscape mixing. The first APK is a sample-data demo with local channel mapping and native layout/report sharing. Future direct Qu-24 control will use a native transport; it does not require the laptop bridge used by the web architecture. iPad/web support remains a later/shared-UI option. See [Android setup](ANDROID_SETUP.md).
 
 ## Product vision
+
+Android 0.8.0 adds explicit, default-off Auto balance as an experimental calibrated level-hold pilot. It reads Qu-24 meters, observes a reference for at least ten seconds, requires operator approval, and makes small LR-input-fader corrections within ±3 dB. It excludes silent/inactive sources and stops on stale/invalid feedback, near-clipping, manual input fader/mute changes, app actions or disconnect. It is not room-aware automatic mixing, speech detection, EQ, gain adjustment, or feedback protection. See [current Auto behavior and hardware-validation boundary](AUTO_BALANCE.md); earlier broad roadmap language below remains historical context.
 
 Android 0.7.0 adds bounded Wi-Fi discovery of possible mixer TCP ports, so volunteers normally need not type an IP. This is not Qu-Pad's proprietary UDP discovery. Selection still runs strict Qu-24 identity/state validation before a separate live-enable step. Manual IP remains the fallback for isolated, routed or larger networks. Discovery outcomes join the existing private diagnostic logs. S23 local-endpoint discovery and simulator regression checks passed; church hardware remains unverified.
 

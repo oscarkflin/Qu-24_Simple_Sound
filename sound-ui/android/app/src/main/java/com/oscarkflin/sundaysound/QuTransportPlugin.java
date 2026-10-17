@@ -16,6 +16,8 @@ public class QuTransportPlugin extends Plugin {
     private final ScheduledExecutorService clock=Executors.newSingleThreadScheduledExecutor();
     private volatile Socket socket;
     private volatile long lastRx;
+    private volatile boolean metersOn=false;
+    private long lastMeterTrace=0;
     private volatile int generation=0;
     private volatile boolean connecting=false;
     private volatile boolean discovering=false;
@@ -85,7 +87,7 @@ public class QuTransportPlugin extends Plugin {
             Socket candidate=new Socket();
             try {
                 candidate.connect(new InetSocketAddress(host,51325),5000);candidate.setTcpNoDelay(true);candidate.setSoTimeout(1000);
-                synchronized(this){if(ticket!=generation){candidate.close();call.reject("Connection cancelled");return;}socket=candidate;connecting=false;lastRx=System.currentTimeMillis();
+                synchronized(this){if(ticket!=generation){candidate.close();call.reject("Connection cancelled");return;}socket=candidate;connecting=false;metersOn=false;lastMeterTrace=0;lastRx=System.currentTimeMillis();
                     heartbeat=clock.scheduleAtFixedRate(()->{if(socket!=candidate)return;if(System.currentTimeMillis()-lastRx>6000){close("No data from mixer for 6 seconds");return;}try{write(candidate,new byte[]{(byte)0xFE});}catch(IOException e){close("Heartbeat failed: "+e.getMessage());}},300,300,TimeUnit.MILLISECONDS);
                 }
                 event("socket-open","TCP open; awaiting Qu identity and state");call.resolve();
@@ -94,14 +96,15 @@ public class QuTransportPlugin extends Plugin {
         });
     }
     private void read(Socket active){byte[] bytes=new byte[4096];try{InputStream input=active.getInputStream();while(socket==active){try{int length=input.read(bytes);if(length<0)throw new EOFException("Mixer closed TCP connection");lastRx=System.currentTimeMillis();boolean onlyHeartbeat=true;for(int i=0;i<length;i++)if((bytes[i]&255)!=254)onlyHeartbeat=false;
-                    if(!onlyHeartbeat){QuDiagnostics.record("tcp.rx",hex(bytes,length));JSObject data=new JSObject();data.put("base64",Base64.encodeToString(bytes,0,length,Base64.NO_WRAP));notifyListeners("data",data);}
+                    if(!onlyHeartbeat){if(!metersOn||System.currentTimeMillis()-lastMeterTrace>5000){QuDiagnostics.record("tcp.rx",hex(bytes,length));lastMeterTrace=System.currentTimeMillis();}JSObject data=new JSObject();data.put("base64",Base64.encodeToString(bytes,0,length,Base64.NO_WRAP));data.put("receivedAt",System.currentTimeMillis());notifyListeners("data",data);}
                 }catch(SocketTimeoutException ignored){}}
             }catch(Exception e){if(socket==active)close("Read failed: "+e.getMessage());}
     }
     private synchronized void write(Socket target,byte[] data)throws IOException {if(socket!=target)throw new IOException("Connection changed");target.getOutputStream().write(data);target.getOutputStream().flush();if(data.length!=1)QuDiagnostics.record("tcp.tx",hex(data,data.length));}
     private String hex(byte[] bytes,int length){StringBuilder s=new StringBuilder();for(int i=0;i<Math.min(length,4096);i++)s.append(String.format("%02X ",bytes[i]&255));return s.toString();}
-    // Deliberately allow only state requests, input mutes, and LR input faders.
+    // Deliberately allow only state/meter requests, input mutes, and LR input faders.
     private boolean allowed(byte[] b){
+        if(b.length==12&&(b[0]&255)==240&&b[1]==0&&b[2]==0&&b[3]==26&&b[4]==80&&b[5]==17&&b[6]==1&&b[7]==0&&(b[8]&255)<=15&&b[9]==18&&(b[10]==0||b[10]==1)&&(b[11]&255)==247)return true;
         int[] request={240,0,0,26,80,17,1,0,127,16,0,247};
         if(b.length==12){boolean match=true;for(int i=0;i<12;i++)if((b[i]&255)!=request[i])match=false;if(match)return true;}
         if(b.length==6){int s=b[0]&255,ch=b[1]&255;return s>=144&&s<=159&&input(ch)&&(b[2]==127||b[2]==63)&&b[3]==b[0]&&b[4]==b[1]&&b[5]==0;}
@@ -111,7 +114,7 @@ public class QuTransportPlugin extends Plugin {
     private boolean input(int ch){return (ch>=32&&ch<=55)||(ch>=64&&ch<=66)||(ch>=8&&ch<=11);}
     @PluginMethod public void send(PluginCall call){
         try{JSArray values=call.getArray("bytes");if(values==null||values.length()>12)throw new Exception("Invalid MIDI packet");byte[] bytes=new byte[values.length()];for(int i=0;i<bytes.length;i++){int v=values.getInt(i);if(v<0||v>255)throw new Exception("Invalid MIDI byte");bytes[i]=(byte)v;}if(!allowed(bytes))throw new Exception("Unsupported MIDI command");Socket target=socket;if(target==null)throw new Exception("Mixer disconnected");
-            writer.execute(()->{try{write(target,bytes);call.resolve();}catch(Exception e){QuDiagnostics.record("command.error",e.toString());if(socket==target)close("Write failed: "+e.getMessage());call.reject(e.getMessage());}});
+            writer.execute(()->{try{if((bytes[0]&255)==240&&bytes.length==12&&bytes[9]==18)metersOn=bytes[10]==1;write(target,bytes);call.resolve();}catch(Exception e){QuDiagnostics.record("command.error",e.toString());if(socket==target)close("Write failed: "+e.getMessage());call.reject(e.getMessage());}});
         }catch(Exception e){call.reject(e.getMessage());}
     }
     @PluginMethod public void diagnostics(PluginCall call){JSObject result=new JSObject();result.put("events",QuDiagnostics.read(Boolean.TRUE.equals(call.getBoolean("raw",false))));result.put("android",android.os.Build.VERSION.RELEASE);result.put("model",android.os.Build.MODEL);call.resolve(result);}

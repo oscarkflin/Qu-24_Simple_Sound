@@ -20,6 +20,38 @@ function checkMidi(n: number) {
 export const stateRequest = () => [
   0xf0, 0, 0, 0x1a, 0x50, 0x11, 1, 0, 0x7f, 0x10, 0, 0xf7,
 ];
+export function meterRequest(on: boolean, n: number) {
+  checkMidi(n);
+  return [240, 0, 0, 26, 80, 17, 1, 0, n, 18, on ? 1 : 0, 247];
+}
+// Qu-24 only: 830 big-endian 7Q8/0x8000-offset meters, pp.11–12.
+export function decodeQu24Meters(packed: number[]) {
+  const bytes: number[] = [];
+  for (let i = 0; i < packed.length;) {
+    const mask = packed[i++];
+    const count = Math.min(7, packed.length - i);
+    if (!count || mask & ((1 << (7 - count)) - 1)) return null;
+    for (let j = 0; j < count; j++)
+      bytes.push(packed[i++] | (((mask >> (6 - j)) & 1) << 7));
+  }
+  if (bytes.length !== 1660) return null;
+  const values = Array.from(
+    { length: 830 },
+    (_, i) => (bytes[i * 2] * 256 + bytes[i * 2 + 1] - 32768) / 256,
+  );
+  const inputs: Record<string, number> = {};
+  const preamps: number[] = [];
+  for (let i = 0; i < 24; i++) {
+    inputs[`ch${i + 1}`] = values[i * 10 + 3];
+    preamps.push(values[i * 10]);
+  }
+  for (let i = 0; i < 3; i++) {
+    const offset = 240 + i * 20;
+    inputs[`st${i + 1}`] = Math.max(values[offset + 3], values[offset + 13]);
+    preamps.push(values[offset], values[offset + 10]);
+  }
+  return { inputs, peak: Math.max(...preamps, values[687], values[688]) };
+}
 export function muteBytes(id: string, muted: boolean, n: number) {
   checkMidi(n);
   const ch = address(id);
@@ -98,6 +130,12 @@ export type QuEvent =
   | { type: 'sync-end'; midi: number }
   | { type: 'mute'; midi: number; id: string; muted: boolean }
   | { type: 'fader'; midi: number; id: string; raw: number }
+  | {
+      type: 'meters';
+      midi: number;
+      inputs: Record<string, number>;
+      peak: number;
+    }
   | { type: 'parse-warning'; message: string };
 export class QuParser {
   private status = 0;
@@ -158,6 +196,14 @@ export class QuParser {
   private onSysex(b: number[]) {
     const h = [0xf0, 0, 0, 0x1a, 0x50, 0x11, 1, 0];
     if (!h.every((v, i) => b[i] === v) || b[8] > 15) return;
+    if (b[9] === 0x13) {
+      const meters = decodeQu24Meters(b.slice(10, -1));
+      this.emit(
+        meters
+          ? { type: 'meters', midi: b[8], ...meters }
+          : { type: 'parse-warning', message: 'Invalid Qu-24 meter frame' },
+      );
+    }
     if (b[9] === 0x11 && b.length === 14)
       this.emit({
         type: 'identity',

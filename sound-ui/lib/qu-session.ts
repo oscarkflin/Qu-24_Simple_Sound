@@ -11,10 +11,12 @@ import {
   faderBytes,
   rawDb,
   adjustedRaw,
+  meterRequest,
   type QuEvent,
 } from './qu-protocol.ts';
 import { applyAction, type Mix, type Action } from './assistant-model.ts';
 import { logEvent, scrub } from './diagnostics.ts';
+import { AutoBalance, type AutoStatus } from './auto-balance.ts';
 
 type Observed = { muted?: boolean; raw?: number };
 export type ConnectionState = {
@@ -32,6 +34,7 @@ export type ConnectionState = {
   busy: boolean;
   canUndo: boolean;
   revision: number;
+  automation?: AutoStatus;
 };
 export interface Transport {
   discover(): Promise<{ hosts: string[]; limited: boolean }>;
@@ -52,6 +55,129 @@ type Change = {
   after: number | boolean;
 };
 export class QuSession {
+  private auto = new AutoBalance();
+  private autoTimer: ReturnType<typeof setInterval> | undefined;
+  private autoMix: Mix | null = null;
+  private autoChanges = new Map<string, Change>();
+  private autoPending = new Map<string, number>();
+  private meterLogAt = 0;
+  private autoGeneration = 0;
+  private autoRunning = false;
+  private meterStarted = 0;
+  private autoOff(reason: string) {
+    if (this.auto.status.mode !== 'off') {
+      logEvent('qu.auto.stopped', { reason });
+      if (this.state.identity && this.state.phase === 'live')
+        void this.transport
+          .send({ bytes: meterRequest(false, this.state.identity.midi) })
+          .catch((e) =>
+            logEvent('qu.meters.stop-failed', { message: scrub(e) }, 'error'),
+          );
+    }
+    this.autoGeneration++;
+    this.auto.stop(reason);
+    clearInterval(this.autoTimer);
+    this.autoTimer = undefined;
+  }
+  stopAuto() {
+    this.autoOff(
+      'Auto balance is off. Current faders are kept; Undo can restore automatic changes.',
+    );
+    this.publish();
+  }
+  async observeMeters() {
+    if (this.state.phase !== 'live' || !this.complete() || this.state.busy)
+      throw new Error('Enable live channel control before checking meters.');
+    this.autoOff('Starting meter check');
+    this.auto.observe(Date.now());
+    this.meterStarted = Date.now();
+    this.autoChanges.clear();
+    this.autoMix = null;
+    const ticket = this.autoGeneration;
+    try {
+      await this.transport.send({
+        bytes: meterRequest(true, this.state.identity!.midi),
+      });
+    } catch (e) {
+      this.autoOff('Could not start meters.');
+      this.publish();
+      throw e;
+    }
+    logEvent('qu.meters.started');
+    if (ticket !== this.autoGeneration || this.auto.status.mode !== 'observe')
+      return;
+    this.autoTimer = setInterval(() => {
+      void this.autoTick();
+    }, 500);
+    this.publish();
+  }
+  enableAuto(mix: Mix) {
+    if (this.state.phase !== 'live' || !this.complete() || this.state.busy)
+      throw new Error('Live mixer state is unavailable or busy.');
+    this.auto.enable(mix, this.state.observed, Date.now());
+    this.autoMix = mix;
+    this.autoChanges.clear();
+    this.undoRecord = null;
+    logEvent('qu.auto.enabled', {
+      channels: Object.keys(this.auto.baseline),
+      baseline: this.auto.baseline,
+      groups: this.auto.groups,
+      limitsDb: 3,
+    });
+    this.publish();
+  }
+  async autoTick(now = Date.now()) {
+    if (this.auto.status.mode === 'off') return;
+    if (this.state.phase !== 'live' || !this.complete()) {
+      this.autoOff('Stopped: live control unavailable.');
+      this.publish();
+      return;
+    }
+    if (now - this.meterStarted > 3000 && this.auto.stale(now)) {
+      this.autoOff('Stopped: no fresh meter data. Check meters again.');
+      this.publish();
+      return;
+    }
+    if (this.autoRunning || this.state.busy) return;
+    const changes: Change[] = this.auto
+      .plan(this.state.observed, now)
+      .map((c) => ({ ...c, field: 'raw' }));
+    if (!changes.length) {
+      this.publish();
+      return;
+    }
+    const ticket = this.autoGeneration;
+    this.autoRunning = true;
+    try {
+      await this.batch(changes, ticket);
+      logEvent('qu.auto.cycle', {
+        changes: changes.map((c) => ({
+          id: c.id,
+          before: c.before,
+          after: c.after,
+          confirmed: this.state.observed[c.id]?.raw === c.after,
+        })),
+      });
+    } catch (e) {
+      this.autoOff(
+        'Stopped: automatic adjustment was interrupted. Check the desk.',
+      );
+      logEvent('qu.auto.error', { message: scrub(e) }, 'error');
+    } finally {
+      for (const c of changes)
+        if (this.state.observed[c.id]?.raw === c.after) {
+          const old = this.autoChanges.get(c.id);
+          this.autoChanges.set(c.id, { ...c, before: old?.before ?? c.before });
+        }
+      if (this.autoChanges.size && this.state.phase === 'live')
+        this.undoRecord = {
+          changes: [...this.autoChanges.values()],
+          mode: this.autoMix!.mode,
+        };
+      this.autoRunning = false;
+      this.publish();
+    }
+  }
   async discover() {
     if (!this.supported)
       throw new Error('Mixer discovery is available in the Android app.');
@@ -112,6 +238,7 @@ export class QuSession {
       ...this.state,
       observed: { ...this.state.observed },
       canUndo: !!this.undoRecord,
+      automation: { ...this.auto.status },
       revision: this.state.revision + 1,
     };
     this.changed(this.state);
@@ -121,6 +248,14 @@ export class QuSession {
     this.listeners = await Promise.all([
       this.transport.addListener('data', (data) => {
         try {
+          if (
+            typeof data.receivedAt === 'number' &&
+            Date.now() - data.receivedAt > 3000 &&
+            this.auto.status.mode !== 'off'
+          )
+            this.autoOff(
+              'Stopped: delayed meter delivery. Check meters again.',
+            );
           this.parser.feed(
             Array.from(atob(data.base64), (c) => c.charCodeAt(0)),
           );
@@ -135,6 +270,7 @@ export class QuSession {
           reason: scrub(data.reason),
         });
         if (data.state === 'disconnected') {
+          this.autoOff('Stopped: mixer disconnected.');
           clearTimeout(this.timer);
           this.rejectWaiting('Mixer disconnected');
           this.undoRecord = null;
@@ -152,6 +288,7 @@ export class QuSession {
     ]);
   }
   async stop() {
+    this.autoOff('Session closed');
     clearTimeout(this.timer);
     this.rejectWaiting('Session closed');
     for (const listener of this.listeners) await listener.remove();
@@ -159,6 +296,7 @@ export class QuSession {
     if (this.supported) await this.transport.disconnect();
   }
   async connect(host: string) {
+    this.autoOff('Auto balance is off after reconnect.');
     if (!this.supported)
       throw new Error(
         'Direct mixer connection is available in the Android app.',
@@ -264,6 +402,10 @@ export class QuSession {
   }
   private received(event: QuEvent) {
     if (event.type === 'parse-warning') {
+      if (this.auto.status.mode !== 'off')
+        this.autoOff(
+          'Stopped: invalid meter/MIDI data. Recheck the connection.',
+        );
       logEvent('qu.parser.warning', { message: event.message }, 'error');
       return;
     }
@@ -298,6 +440,28 @@ export class QuSession {
       return;
     }
     if (!this.state.identity || event.midi !== this.state.identity.midi) return;
+    if (event.type === 'meters') {
+      const previous = this.auto.status.mode;
+      this.auto.receive(event, Date.now());
+      if (previous !== 'off' && this.auto.status.mode === 'off') {
+        logEvent('qu.auto.stopped', { reason: this.auto.status.message });
+        this.autoGeneration++;
+        clearInterval(this.autoTimer);
+        void this.transport
+          .send({ bytes: meterRequest(false, this.state.identity.midi) })
+          .catch(() => {});
+      }
+      if (Date.now() - this.meterLogAt > 5000 && previous !== 'off') {
+        this.meterLogAt = Date.now();
+        logEvent('qu.meters.summary', {
+          inputs: event.inputs,
+          peak: event.peak,
+          mode: this.auto.status.mode,
+          frames: this.auto.status.frames,
+        });
+      }
+      return;
+    }
     if (event.type === 'sync-end') {
       this.syncEnd = true;
       clearTimeout(this.timer);
@@ -317,6 +481,14 @@ export class QuSession {
       return;
     }
     const old = this.state.observed[event.id] || {};
+    const changed =
+      event.type === 'mute' ? old.muted !== event.muted : old.raw !== event.raw;
+    const expected =
+      event.type === 'fader' && this.autoPending.get(event.id) === event.raw;
+    if (changed && !expected && this.auto.status.mode !== 'off')
+      this.autoOff(
+        'Stopped: channel settings changed. Check meters again before restarting.',
+      );
     this.state.observed[event.id] = {
       ...old,
       ...(event.type === 'mute' ? { muted: event.muted } : { raw: event.raw }),
@@ -424,6 +596,7 @@ export class QuSession {
     }
   }
   async run(action: Action, current: Mix): Promise<Mix> {
+    this.autoOff('Stopped for a manual action. Check meters again to restart.');
     if (this.state.phase !== 'live' || !this.complete() || this.state.busy)
       throw new Error('Live mixer state is unavailable or busy.');
     if (
@@ -495,12 +668,21 @@ export class QuSession {
     this.publish();
     return this.observedMix(target);
   }
-  private async batch(changes: Change[]) {
+  private async batch(changes: Change[], autoTicket?: number) {
     this.state = { ...this.state, busy: true };
     this.publish();
     let confirmed = 0;
+    if (autoTicket !== undefined)
+      for (const c of changes) this.autoPending.set(c.id, c.after as number);
     try {
       for (const change of changes) {
+        if (autoTicket !== undefined && this.auto.stale(Date.now()))
+          this.autoOff('Stopped: meter data became stale during adjustment.');
+        if (
+          autoTicket !== undefined &&
+          (autoTicket !== this.autoGeneration || this.auto.status.mode !== 'on')
+        )
+          break;
         await this.command(change);
         confirmed++;
       }
@@ -517,11 +699,13 @@ export class QuSession {
         this.state = { ...this.state, phase: 'readonly', message };
       throw new Error(message);
     } finally {
+      if (autoTicket !== undefined) this.autoPending.clear();
       this.state = { ...this.state, busy: false };
       this.publish();
     }
   }
   async undo(current: Mix): Promise<Mix> {
+    this.autoOff('Stopped for Undo. Check meters again to restart.');
     const record = this.undoRecord;
     if (!record || this.state.phase !== 'live' || this.state.busy)
       throw new Error('No live adjustment to undo.');

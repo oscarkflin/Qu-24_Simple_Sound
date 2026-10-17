@@ -1,6 +1,6 @@
 # Android demo — Galaxy S23
 
-The current Android build is **0.6.0-pilot**, package `com.oscarkflin.sundaysound` (launcher name Sunday Sound Demo). The interface opens offline in Demo. Direct Qu-24 TCP connection and bounded live input control are available under Settings after identity/state verification. They have passed simulated-mixer tests on the S23; the actual church desk remains unverified. Follow [the church pilot guide](QU24_CHURCH_TEST.md) for connection, limits, and issue reporting. Automatic discovery and audio balancing are not implemented.
+The current Android build is **0.8.0-pilot**, package `com.oscarkflin.sundaysound` (launcher name Sunday Sound Demo). The interface opens offline in Demo. Direct Qu-24 TCP control, Wi-Fi search, and experimental calibrated Auto balance are available after the required setup/verification. They have passed local-endpoint/simulated-mixer tests on the S23; the actual church desk remains unverified. Follow [the church pilot guide](QU24_CHURCH_TEST.md) and [Auto balance guide](AUTO_BALANCE.md) for connection, limits, and issue reporting. Room-listening-based automatic mixing and voice activation are not implemented.
 
 ## Enter your actual patch
 
@@ -91,3 +91,7 @@ The native Qu transport begins with mixer discovery or manual IP and read-only s
 ## Android 0.7.0: Wi-Fi mixer search
 
 Settings → **Find mixer on Wi-Fi** searches the phone's local Wi-Fi for possible mixer TCP control ports. Tap a result to verify/read a Qu-24, then separately enable live control. Manual IP entry remains available. Search sends no MIDI commands, is unavailable while connected, and cancels if the app leaves the foreground. See [church test guide](QU24_CHURCH_TEST.md) for subnet limits and troubleshooting. This does not use Qu-Pad's undocumented UDP protocol.
+
+## Android 0.8.0: Auto balance on/off
+
+The home screen now includes an experimental Auto switch, off by default. It requires a saved actual patch, a live synchronized Qu-24, a selected service mode, a ten-second observation-only meter check, and operator approval of the starting mix. Corrections are bounded to ±3 dB; stop reasons and changes are logged. [Read setup, safety limits and Undo behavior](AUTO_BALANCE.md) before testing it at church. It is not room listening, voice activation, or feedback protection.

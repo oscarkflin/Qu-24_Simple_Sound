@@ -2,7 +2,7 @@
 
 Sunday Sound is a local, landscape-first web interface prototype for a church Allen & Heath Qu-24. Review it on a laptop or an iPad on the same trusted network.
 
-**Android 0.7.0 pilot:** direct Qu-24 connection, Wi-Fi mixer-port search, and bounded channel control are implemented. Wi-Fi discovery was tested against a local test endpoint on the S23; channel control was tested with a simulated mixer. Actual church hardware validation is still required. The browser prototype remains sample-data only. Automatic audio balancing is not implemented.
+**Android 0.8.0 pilot:** direct Qu-24 connection, Wi-Fi search, bounded channel control, and an explicit Auto balance on/off control are implemented. Auto is experimental meter-based level hold around an operator-approved mix, not listening-based autonomous mixing. It defaults off and requires calibration. See [Auto balance setup and limits](AUTO_BALANCE.md). Tests use local endpoints/simulated mixers on the S23; actual church hardware validation is still required. The browser prototype remains sample-data only.
 
 ## Start
 
