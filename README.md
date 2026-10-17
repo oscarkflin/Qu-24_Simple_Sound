@@ -8,7 +8,7 @@ Sunday Sound is a local, landscape-first web interface prototype for a church Al
 
 **Android / Galaxy S23:** see [Android demo setup](ANDROID_SETUP.md) for the installable APK, phone test steps, and Windows build instructions. The Android demo works without a laptop host after installation.
 
-The phone now uses a simpler assistant home: Speaking, Worship, More voice, Less music, request-based adjustments, and Mute all/Restore. The browser retains the original detailed mixer prototype.
+The phone uses a simpler assistant home: Speaking, Worship, Together, More voice, Less music, request-based adjustments, and Mute all/Restore. Use Settings → Set up instruments & channels to enter and save your actual patch. The browser retains the original detailed mixer prototype.
 
 For church networking, the iPad/laptop setup, and the future real-mixer commissioning checklist, read [Qu-24 hardware setup](QU24_SETUP.md). Hardware control is not implemented yet.
 

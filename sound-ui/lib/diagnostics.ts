@@ -1,4 +1,4 @@
-export const BUILD_ID = 'android-assistant-demo-0.4.0';
+export const BUILD_ID = 'android-assistant-demo-0.5.0';
 const KEY = 'sunday-sound.diagnostics.v1';
 export type LogEvent = {
   at: string;

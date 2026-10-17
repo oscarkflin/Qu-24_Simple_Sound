@@ -1,6 +1,21 @@
 # Android demo — Galaxy S23
 
-The current Android build is **Sunday Sound Demo 0.4.0**, package `com.oscarkflin.sundaysound`. It bundles a simplified assistant interface inside the app and opens without a website host or Internet. All mixer controls still use sample data. Qu discovery and direct hardware control are planned, not included.
+The current Android build is **Sunday Sound Demo 0.5.0**, package `com.oscarkflin.sundaysound`. It bundles a simplified assistant interface inside the app and opens without a website host or Internet. You can enter your real patch, but mixer controls still affect demo data only. Qu discovery and direct hardware control are planned, not included.
+
+## Enter your actual patch
+
+Tap the settings icon → **Set up instruments & channels**. Each source has:
+
+- **Name:** your instrument or person's name, such as Nord Stage or Worship leader.
+- **Instrument / microphone:** pastor/speaker, vocal, piano, acoustic/electric guitar, bass, drums, playback/computer, or other. This lets the assistant recognize instrument requests even after you rename a source.
+- **Qu channels:** enter the actual input number, comma-separated numbers for paired/grouped channels, or ST1–ST3. For example, `5, 6` for a stereo keyboard. This groups control in the app; it does not configure stereo linking on the console.
+- **Role:** Speaking, Vocal, or Instrument. The instrument choice supplies a sensible role, which you can change.
+
+Add or remove sources to match the equipment actually used. Duplicate channels, invalid numbers, and missing names are rejected. Tap **Save my patch** to save it on this phone; **Cancel** discards draft changes. Saving applies the current mode in the demo, mutes removed/unassigned inputs, and clears old Undo history so it cannot restore an obsolete patch. Existing fader levels stay with the physical channel.
+
+Speaking opens assigned Speaking sources. Worship opens Vocal and Instrument sources. **Together** opens all three roles for prayer over music or the pastor joining worship. More voice includes both speaking and vocal roles in Together. Mute all still covers every input even if it is not assigned. Patch editing is disabled while all inputs are muted so Restore keeps an exact snapshot.
+
+The patch is saved locally and loads on reopening the app. Browser and Android app patches are separate. Reports omit source names by default. There is no patch transfer/import screen in this simplified phone version yet.
 
 ## Install the APK on your phone
 
@@ -12,7 +27,7 @@ This is a debug-signed test APK, not a Google Play release. Keep the same signin
 
 ## What to try on the S23 — simplified assistant
 
-- Start in portrait. Choose **Speaking** or **Worship**; the assistant switches the example input mute states without changing fader levels.
+- Start in portrait. Choose **Speaking**, **Worship**, or **Together**; the assistant switches the assigned input mute states without changing fader levels.
 - Tap **More voice** or **Less music** for a 1 dB adjustment to the active example channels. Undo restores the preceding adjustment.
 - Open **Help me balance**, then try “piano too loud” or “vocals too quiet.” The app previews one small channel adjustment before applying it. These are local request rules, not an LLM or audio analysis.
 - Tap **Mute all**: all 24 mono input channels, 3 stereo input channels, and 4 FX returns are muted in the model, including unused/unmapped inputs. Output masters are not moved. No other adjustment or mode switch is allowed until Restore.
@@ -20,11 +35,11 @@ This is a debug-signed test APK, not a Google Play release. Keep the same signin
 - Open the options icon for English/Traditional Chinese and **Share diagnostic report**. Android opens its share sheet. The report includes all modeled input states and recent actions; native Android crash traces are not automatically included.
 - Turn on airplane mode and reopen the app to confirm the bundled UI still opens. This version has no mixer connection or IP setup screen.
 
-Channel maps, monitor sliders, and setup tables are no longer on the phone's main surface. The earlier full mixer prototype remains available in the browser project. Phone requests about monitor mixes, EQ, multiple conflicting sources, or currently muted sources do not trigger a level change. Speech detection needs a suitable mixer audio feed and is not enabled in this build.
+Channel assignments are behind Settings; monitor sliders and engineering tables are not on the main phone surface. The earlier full mixer prototype remains available in the browser project. Phone requests about monitor mixes, EQ, multiple conflicting sources, or currently muted sources do not trigger a level change. Speech detection needs a suitable mixer audio feed and is not enabled in this build.
 
 The screen stays awake while this app's activity is visible. Rotation is allowed. Android Back closes a dialog where supported; otherwise it scrolls the current surface to the top. Home leaves the app normally.
 
-The earlier saved layout remains in the app's WebView storage when updating in place, but the simplified phone demo uses a fixed example patch and does not edit that layout. Recent UI events remain local; OS backup is disabled. Mixer state and the Restore snapshot are temporary demo state and reset when the UI reloads. A future live app must read current console state on startup rather than initialize the console from these demo values.
+The earlier full-mixer layout remains in WebView storage when updating in place; the assistant uses its own saved patch. Recent UI events remain local; OS backup is disabled. Mixer levels, mode, and the Restore snapshot are temporary demo state and reset when the UI reloads; patch assignments persist. A future live app must read current console state on startup rather than initialize the console from these demo values.
 
 ## Build on Windows or macOS
 

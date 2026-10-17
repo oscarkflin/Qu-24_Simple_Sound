@@ -12,6 +12,7 @@ import {
   Download,
   Check,
   ArrowRight,
+  Users,
 } from 'lucide-react';
 import {
   Dialog,
@@ -28,7 +29,14 @@ import {
   type Action,
   type Suggestion,
   type Mode,
+  examplePatch,
+  validatePatch,
+  applyPatch,
+  PATCH_KEY,
+  channelName,
+  type Patch,
 } from '@/lib/assistant-model';
+import { PatchEditor } from './patch-editor';
 import {
   createReport,
   downloadJson,
@@ -38,22 +46,62 @@ import {
 import './assistant.css';
 
 export default function SoundAssistant() {
-  const [mix, setMix] = useState(initialMix),
+  const [initial] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PATCH_KEY);
+      return {
+        patch: saved ? validatePatch(JSON.parse(saved)) : examplePatch,
+        saved: !!saved,
+        error: '',
+      };
+    } catch {
+      return {
+        patch: examplePatch,
+        saved: false,
+        error:
+          'Saved patch could not be loaded. Example assignments are shown.',
+      };
+    }
+  });
+  const [patch, setPatch] = useState<Patch>(initial.patch);
+  const [savedPatch, setSavedPatch] = useState(initial.saved);
+  const [patchWarning, setPatchWarning] = useState(initial.error);
+  const [mix, setMix] = useState(() => initialMix(initial.patch)),
     [zh, setZh] = useState(false),
     [history, setHistory] = useState<Mix[]>([]);
-  const [panel, setPanel] = useState<'ask' | 'settings' | 'restore' | null>(
-      null,
-    ),
+  const [panel, setPanel] = useState<
+      'ask' | 'settings' | 'restore' | 'patch' | null
+    >(null),
     [request, setRequest] = useState(''),
     [proposal, setProposal] = useState<Suggestion | null>(null),
     [reply, setReply] = useState(''),
     [fileStatus, setFileStatus] = useState('');
   const [last, setLast] = useState({
-    en: 'Voices and instruments are ready for worship.',
-    zh: '人聲與樂器已準備好敬拜。',
+    en: initial.saved
+      ? 'Your saved patch is ready for worship.'
+      : 'Using the example patch. Set up your channels in Options.',
+    zh: initial.saved
+      ? '已載入您的配置，可進行敬拜。'
+      : '目前使用範例配置，請在選項中設定您的通道。',
   });
   const t = (en: string, cn: string) => (zh ? cn : en);
   const muted = !!mix.beforeMute;
+  const savePatch = (value: Patch) => {
+    if (muted) throw new Error('Restore sound before changing the patch.');
+    localStorage.setItem(PATCH_KEY, JSON.stringify(value));
+    setPatch(value);
+    setSavedPatch(true);
+    setPatchWarning('');
+    setMix((current) => applyPatch(current, value));
+    setHistory([]);
+    setProposal(null);
+    setLast({
+      en: 'Your patch is saved. Current mode applied.',
+      zh: '已儲存您的配置，並套用目前模式。',
+    });
+    setPanel('settings');
+    logEvent('assistant.patch-saved', { sourceCount: value.sources.length });
+  };
   useEffect(() => {
     const stop = startDiagnostics();
     const status = (e: Event) =>
@@ -67,6 +115,7 @@ export default function SoundAssistant() {
   useEffect(() => {
     document.documentElement.lang = zh ? 'zh-Hant' : 'en';
   }, [zh]);
+  useEffect(()=>{const frame=requestAnimationFrame(()=>document.querySelector<HTMLElement>('.assistant-dialog')?.scrollTo({top:0,behavior:'instant'}));return()=>cancelAnimationFrame(frame);},[panel]);
   const act = (action: Action, en: string, cn: string) => {
     const next = applyAction(mix, action);
     if (next === mix) return;
@@ -87,11 +136,15 @@ export default function SoundAssistant() {
     act(
       { type: 'mode', mode: value },
       value === 'speaking'
-        ? 'Pastor microphone ready. Worship channels muted.'
-        : 'Worship voices and instruments ready. Pastor muted.',
+        ? 'Speaking microphones ready. Worship channels muted.'
+        : value === 'together'
+          ? 'Speaking, vocals, and instruments are ready together.'
+          : 'Worship voices and instruments ready. Speaking channels muted.',
       value === 'speaking'
         ? '講員麥克風已開啟，敬拜通道已靜音。'
-        : '敬拜人聲與樂器已開啟，講員已靜音。',
+        : value === 'together'
+          ? '講員、人聲與樂器已一起開啟。'
+          : '敬拜人聲與樂器已開啟，講員已靜音。',
     );
   const adjust = (group: 'voice' | 'music', delta: number) => {
     const ids = balanceIds(mix, group);
@@ -156,7 +209,17 @@ export default function SoundAssistant() {
           >
             <Mic size={26} />
             <span>{t('Speaking', '講道')}</span>
-            <small>{t('Pastor mic', '講員麥克風')}</small>
+            <small>{t('Speaking mics', '講員麥克風')}</small>
+          </button>
+          <button
+            className="assistant-together"
+            disabled={muted}
+            aria-pressed={mix.mode === 'together'}
+            onClick={() => mode('together')}
+          >
+            <Users size={21} />
+            <span>{t('Together', '一起使用')}</span>
+            <small>{t('Speaking + worship', '講員與敬拜')}</small>
           </button>
           <button
             disabled={muted}
@@ -282,7 +345,9 @@ export default function SoundAssistant() {
               ? t('What needs changing?', '哪裡需要調整？')
               : panel === 'restore'
                 ? t('Restore the previous sound?', '還原先前的聲音？')
-                : t('A simpler Sunday.', '讓主日更簡單。')}
+                : panel === 'patch'
+                  ? t('Your instruments & channels', '您的樂器與通道')
+                  : t('Your sound setup', '您的音響設定')}
           </DialogTitle>
           <DialogDescription>
             {panel === 'ask'
@@ -296,10 +361,26 @@ export default function SoundAssistant() {
                     '先前開啟的通道將重新開啟，原本靜音的通道會保持靜音。',
                   )
                 : t(
-                    'Offline demo · sample channel assignments',
-                    '離線示範 · 範例通道配置',
+                    panel === 'patch'
+                      ? 'Enter the actual patch from your Qu-24. Changes stay on this phone.'
+                      : savedPatch
+                        ? 'Offline demo · using your saved patch'
+                        : 'Offline demo · example patch',
+                    panel === 'patch'
+                      ? '輸入 Qu-24 的實際配置，變更將儲存於此手機。'
+                      : savedPatch
+                        ? '離線示範 · 使用已儲存配置'
+                        : '離線示範 · 使用範例配置',
                   )}
           </DialogDescription>
+          {panel === 'patch' && (
+            <PatchEditor
+              patch={patch}
+              zh={zh}
+              onSave={savePatch}
+              onCancel={() => setPanel('settings')}
+            />
+          )}
           {panel === 'ask' && (
             <>
               <form
@@ -396,6 +477,34 @@ export default function SoundAssistant() {
           {panel === 'settings' && (
             <>
               <button
+                className="assistant-primary"
+                disabled={muted}
+                onClick={() => setPanel('patch')}
+              >
+                {t('Set up instruments & channels', '設定樂器與通道')}
+              </button>
+              {muted && (
+                <p className="assistant-small">
+                  {t(
+                    'Restore sound before editing assignments.',
+                    '請先還原聲音，再編輯配置。',
+                  )}
+                </p>
+              )}
+              {patchWarning && (
+                <p role="alert" className="patch-error">
+                  {patchWarning}
+                </p>
+              )}
+              <div className="patch-summary">
+                {patch.sources.map((s) => (
+                  <div key={s.id}>
+                    <span>{s.name}</span>
+                    <small>{s.channels.map(channelName).join(', ')}</small>
+                  </div>
+                ))}
+              </div>
+              <button
                 className="assistant-secondary"
                 onClick={() => setZh((v) => !v)}
               >
@@ -410,8 +519,8 @@ export default function SoundAssistant() {
                 </p>
                 <p>
                   {t(
-                    'The assistant is not listening to audio yet. Speaking and Worship use example channel assignments.',
-                    '助理尚未聆聽音訊。講道與敬拜使用範例通道配置。',
+                    'The assistant is not listening to audio yet. Modes and balance requests follow your channel assignments.',
+                    '助理尚未聆聽音訊。模式與平衡需求會依照您的通道配置運作。',
                   )}
                 </p>
               </div>
@@ -420,7 +529,31 @@ export default function SoundAssistant() {
                 onClick={() => {
                   downloadJson(
                     'sunday-sound-report.json',
-                    createReport({ experience: 'simple-assistant', mix }, ''),
+                    createReport(
+                      {
+                        experience: 'simple-assistant',
+                        patch: {
+                          ...patch,
+                          sources: patch.sources.map((s) => ({
+                            ...s,
+                            name: '[omitted]',
+                          })),
+                        },
+                        mix: {
+                          ...mix,
+                          channels: mix.channels.map((c) => ({
+                            ...c,
+                            label: channelName(c.id),
+                          })),
+                          beforeMute:
+                            mix.beforeMute?.map((c) => ({
+                              ...c,
+                              label: channelName(c.id),
+                            })) || null,
+                        },
+                      },
+                      '',
+                    ),
                   );
                 }}
               >

@@ -9,6 +9,126 @@
   background: #141b1e;
   color: #f0f4ef;
 }
+.assistant-modes .assistant-together {
+  grid-column: 1/-1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 14px;
+  gap: 10px;
+  order: 3;
+}
+.assistant-modes .assistant-together > span {
+  font-size: 16px;
+}
+.assistant-modes .assistant-together > small {
+  margin-left: auto;
+  font-size: 12px;
+}
+.patch-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.patch-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.patch-source {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #4a5e62;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.patch-source legend {
+  font-size: 13px;
+  color: #b5c8c4;
+  padding: 0 6px;
+}
+.patch-source label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13px;
+  min-width: 0;
+}
+.patch-source input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #527076;
+  background: #172429;
+  color: #eef3ef;
+  font-size: 16px;
+}
+.patch-source-heading {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.patch-source-heading label {
+  flex: 1;
+}
+.patch-remove {
+  min-width: 44px;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #805854;
+  background: #423035;
+  color: #f1b6ae;
+  border-radius: 8px;
+}
+.patch-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.patch-source [data-slot='select-trigger'] {
+  width: 100%;
+  min-height: 48px;
+  font-size: 14px;
+  padding: 10px;
+  background: #293d41;
+  border-color: #527076;
+}
+.patch-error {
+  font-size: 14px;
+  color: #ffc3b7;
+}
+.patch-save {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.patch-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.patch-summary > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+.patch-summary small {
+  color: #b3c9c6;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.patch-summary span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
 .assistant-header {
   display: flex;
   align-items: center;
