@@ -12,6 +12,8 @@ The next delivery target is an Android app tested on a Samsung Galaxy S23. Reuse
 
 ## Product vision
 
+Android 0.7.0 adds bounded Wi-Fi discovery of possible mixer TCP ports, so volunteers normally need not type an IP. This is not Qu-Pad's proprietary UDP discovery. Selection still runs strict Qu-24 identity/state validation before a separate live-enable step. Manual IP remains the fallback for isolated, routed or larger networks. Discovery outcomes join the existing private diagnostic logs. S23 local-endpoint discovery and simulator regression checks passed; church hardware remains unverified.
+
 Church Sound Operator is an iPad-first assistant for church sound volunteers using an Allen & Heath Qu-24. It does not replace the mixer or attempt to make every volunteer an audio engineer. Instead, it turns technical mixer operations into a simple, safe, church-service workflow.
 
 The Qu-24 remains the audio engine. The app is the operator intelligence and workflow layer.

@@ -86,4 +86,8 @@ Implementation checks: Android debug compilation, standalone web bundle, TypeScr
 
 The dependency audit also reports advisories in the existing web/server/toolchain dependency tree. This change does not upgrade that whole stack. The Android bundle excludes the server runtime; a production release still needs dependency review and release signing.
 
-The native Qu transport now begins with manual IP and read-only state synchronization. Enable live writes only after that succeeds. See [current connection and diagnostic instructions](QU24_CHURCH_TEST.md); the laptop bridge in the older web guide is a separate architecture.
+The native Qu transport begins with mixer discovery or manual IP and read-only state synchronization. Enable live writes only after that succeeds. See [current connection and diagnostic instructions](QU24_CHURCH_TEST.md); the laptop bridge in the older web guide is a separate architecture.
+
+## Android 0.7.0: Wi-Fi mixer search
+
+Settings → **Find mixer on Wi-Fi** searches the phone's local Wi-Fi for possible mixer TCP control ports. Tap a result to verify/read a Qu-24, then separately enable live control. Manual IP entry remains available. Search sends no MIDI commands, is unavailable while connected, and cancels if the app leaves the foreground. See [church test guide](QU24_CHURCH_TEST.md) for subnet limits and troubleshooting. This does not use Qu-Pad's undocumented UDP protocol.

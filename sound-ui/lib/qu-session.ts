@@ -34,6 +34,7 @@ export type ConnectionState = {
   revision: number;
 };
 export interface Transport {
+  discover(): Promise<{ hosts: string[]; limited: boolean }>;
   connect(options: { host: string }): Promise<void>;
   disconnect(): Promise<void>;
   send(options: { bytes: number[] }): Promise<void>;
@@ -51,6 +52,28 @@ type Change = {
   after: number | boolean;
 };
 export class QuSession {
+  async discover() {
+    if (!this.supported)
+      throw new Error('Mixer discovery is available in the Android app.');
+    if (!['demo', 'disconnected', 'error'].includes(this.state.phase))
+      throw new Error('Disconnect before searching for mixers.');
+    logEvent('qu.discovery.started', {});
+    try {
+      const result = await this.transport.discover();
+      logEvent('qu.discovery.completed', {
+        count: result.hosts.length,
+        limited: result.limited,
+      });
+      return result;
+    } catch (error) {
+      logEvent(
+        'qu.discovery.error',
+        { message: scrub(String(error)) },
+        'error',
+      );
+      throw error;
+    }
+  }
   state: ConnectionState = {
     phase: 'demo',
     message: 'Demo; no mixer connection',
@@ -343,8 +366,16 @@ export class QuSession {
   private async command(change: Change) {
     if (this.state.phase !== 'live')
       throw new Error('Live connection is not available.');
-    if(this.state.observed[change.id]?.[change.field]===change.after){logEvent('qu.command.already-observed',{id:change.id,field:change.field,value:change.after});return;}
-    if(this.state.observed[change.id]?.[change.field]!==change.before)throw new Error('The desk changed while this action was being applied.');
+    if (this.state.observed[change.id]?.[change.field] === change.after) {
+      logEvent('qu.command.already-observed', {
+        id: change.id,
+        field: change.field,
+        value: change.after,
+      });
+      return;
+    }
+    if (this.state.observed[change.id]?.[change.field] !== change.before)
+      throw new Error('The desk changed while this action was being applied.');
     const n = this.state.identity!.midi;
     const packet =
       change.field === 'muted'
@@ -404,7 +435,18 @@ export class QuSession {
     const before = this.observedMix(current),
       changes: Change[] = [];
     let target = applyAction(before, action);
-    if(action.type==='mode')target={...target,channels:target.channels.map(c=>c.group==='fx'?{...c,muted:before.channels.find(old=>old.id===c.id)!.muted}:c)};
+    if (action.type === 'mode')
+      target = {
+        ...target,
+        channels: target.channels.map((c) =>
+          c.group === 'fx'
+            ? {
+                ...c,
+                muted: before.channels.find((old) => old.id === c.id)!.muted,
+              }
+            : c,
+        ),
+      };
     if (action.type === 'mute-all')
       target = {
         ...before,
@@ -464,7 +506,7 @@ export class QuSession {
       }
     } catch (e) {
       this.undoRecord = null;
-      this.syncEnd=false;
+      this.syncEnd = false;
       const message = `${confirmed}/${changes.length} changes confirmed. ${(e as Error).message} Reconnect to read the desk again.`;
       logEvent(
         'qu.batch.failed',

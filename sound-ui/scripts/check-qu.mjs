@@ -132,7 +132,11 @@ class MockTransport {
     );
     if (bytes.length === 6) this.board[id].muted = bytes[2] >= 64;
     else this.board[id].raw = bytes[8];
-    if(this.linked&&bytes.length===12&&['ch9','ch10'].includes(id)){const other=id==='ch9'?'ch10':'ch9';this.board[other].raw=bytes[8];if(this.echo)this.data(faderBytes(other,bytes[8],3));}
+    if (this.linked && bytes.length === 12 && ['ch9', 'ch10'].includes(id)) {
+      const other = id === 'ch9' ? 'ch10' : 'ch9';
+      this.board[other].raw = bytes[8];
+      if (this.echo) this.data(faderBytes(other, bytes[8], 3));
+    }
     if (this.echo) this.data(bytes);
   }
 }
@@ -194,16 +198,36 @@ await assert.rejects(
   /No raw readback/,
 );
 assert.equal(session.state.phase, 'readonly');
-assert.throws(()=>session.enableLive(),'A missing readback requires a fresh sync');
+assert.throws(
+  () => session.enableLive(),
+  'A missing readback requires a fresh sync',
+);
 await session.stop();
-const linked=new MockTransport();linked.linked=true;
-({session,mock}=await setup(linked));session.enableLive();
-mix=await session.run({type:'adjust',ids:['ch9','ch10'],delta:1},session.observedMix(initialMix()));
-assert.equal(mock.board.ch9.raw,mock.board.ch10.raw);
-assert.equal(mock.sent.filter(bytes=>bytes[0]!==240).length,1,'Already-observed linked partner must not wait for a redundant echo');
-mix=await session.undo(mix);assert.equal(mock.board.ch9.raw,63);assert.equal(mock.board.ch10.raw,63);
-mock.board.fx3.muted=false;mock.data(muteBytes('fx3',false,3));
-mix=await session.run({type:'mode',mode:'speaking'},mix);assert.equal(mock.board.fx3.muted,false,'Service modes preserve live FX-return mutes');
+const linked = new MockTransport();
+linked.linked = true;
+({ session, mock } = await setup(linked));
+session.enableLive();
+mix = await session.run(
+  { type: 'adjust', ids: ['ch9', 'ch10'], delta: 1 },
+  session.observedMix(initialMix()),
+);
+assert.equal(mock.board.ch9.raw, mock.board.ch10.raw);
+assert.equal(
+  mock.sent.filter((bytes) => bytes[0] !== 240).length,
+  1,
+  'Already-observed linked partner must not wait for a redundant echo',
+);
+mix = await session.undo(mix);
+assert.equal(mock.board.ch9.raw, 63);
+assert.equal(mock.board.ch10.raw, 63);
+mock.board.fx3.muted = false;
+mock.data(muteBytes('fx3', false, 3));
+mix = await session.run({ type: 'mode', mode: 'speaking' }, mix);
+assert.equal(
+  mock.board.fx3.muted,
+  false,
+  'Service modes preserve live FX-return mutes',
+);
 await session.stop();
 const incomplete = new MockTransport();
 incomplete.missing = true;
@@ -217,6 +241,30 @@ wrong.model = 1;
 assert.equal(session.state.phase, 'error');
 assert.throws(() => session.enableLive());
 await session.stop();
+const searchTransport = new MockTransport();
+searchTransport.discover = async () => ({
+  hosts: ['192.168.1.24'],
+  limited: false,
+});
+const discovery = new QuSession(() => {}, searchTransport, true);
+assert.deepEqual(await discovery.discover(), {
+  hosts: ['192.168.1.24'],
+  limited: false,
+});
+assert.equal(
+  searchTransport.sent.length,
+  0,
+  'Discovery must not send MIDI commands',
+);
+assert.equal(
+  discovery.state.phase,
+  'demo',
+  'Discovery must not enable live control',
+);
+discovery.state.phase = 'live';
+await assert.rejects(() => discovery.discover(), /Disconnect/);
+const webDiscovery = new QuSession(() => {}, searchTransport, false);
+await assert.rejects(() => webDiscovery.discover(), /Android/);
 console.log(
   'Passed: official byte vectors; fragmented/running-status MIDI; identity and sync gating; no writes on connect; live adjustment/readback/undo; all 31 input mutes; exact restore without fader writes; stale Undo; missing readback; incomplete sync; wrong mixer rejection.',
 );
