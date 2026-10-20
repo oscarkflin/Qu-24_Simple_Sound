@@ -1,10 +1,10 @@
 # Qu-24 Android pilot: first church test and issue reports
 
-Build: **0.8.0-pilot**, Android app package `com.oscarkflin.sundaysound` (launcher name remains Sunday Sound Demo).
+Build: **0.8.1-pilot**, Android app package `com.oscarkflin.sundaysound` (launcher name remains Sunday Sound Demo).
 
 The app includes direct Android TCP MIDI, state synchronization, bounded input-fader changes, channel modes/mutes, readback-checked Mute all/Restore/Undo, and [experimental Auto balance](AUTO_BALANCE.md). Auto starts off, requires a 10-second meter check and explicit reference approval, and maintains levels rather than listening to audio. Voice detection is not implemented. Start the first real-desk test with manual control and observation only.
 
-**Verification boundary:** protocol tests and a USB-only simulated mixer test on the Galaxy S23 passed. The actual church Qu-24 and church Wi-Fi have not been tested. Treat tomorrow as the first supervised hardware test, before the service, with the physical desk available throughout.
+**Verification boundary:** October 18 church logs confirmed Wi-Fi discovery, Qu-24 identity (reported firmware 1.97), and complete 31/31 mute/fader state reads. No live-enable event or mixer-setting command was recorded there. The new activation flow is tested by replaying that actual traffic locally on the S23, not by operating the physical desk. Real hardware write/readback and Auto remain unverified; test before a service with the responsible operator at the console.
 
 ## Connect without changing the desk
 
@@ -12,14 +12,14 @@ The app includes direct Android TCP MIDI, state synchronization, bounded input-f
 2. Confirm its firmware version. This implementation targets the classic Qu-24 with firmware 1.9 or later; do not update firmware just to try this app. You can search for the mixer from the phone; keep the desk's network-settings IP available as a fallback.
 3. In the app, use Settings → Set up instruments & channels to save your actual patch while still in Demo. Confirm every channel against the desk. This does not change console patching or stereo-link settings.
 4. Under Settings → Qu-24 connection, tap **Find mixer on Wi-Fi**, then tap a result to verify/read it. Alternatively enter the mixer IP and tap **Connect & read desk**. TCP MIDI uses fixed port 51325. Close other mixer apps for the first test and coordinate with other TCP MIDI clients: the manufacturer's protocol allows one such connection. Do not assume every official control app uses this same mechanism.
-5. Look for the Qu-24 identity, firmware, negotiated MIDI channel, **31/31 mute states**, and **31/31 faders received**. Reading the desk does not send sample faders or mode changes. No service mode is selected on connection.
+5. Look for **Qu-24 connected — ready to control**, with **Enable control** immediately below it. Connection settings scroll to this card on success; the home screen also has the same action. This is successful connection awaiting your approval, not a mixer restriction. Identity, firmware, MIDI channel and 31/31 mute/fader counts remain available. Reading the desk sends no demo settings or mode changes.
 6. If state is incomplete, the wrong model answers, or the connection fails, live control stays locked. Export a report rather than trying to override the lock. Disconnect afterward to release the connection.
 
 ## First controlled write test
 
 With the responsible sound operator at the console and outputs controlled appropriately for the test:
 
-1. Check the saved patch once more, then tap **Enable live channel control**. Enabling alone does not move a fader or mute a channel.
+1. Check the saved patch once more, then tap **Enable control**. Settings close to reveal the LIVE home screen. Enabling alone changes no fader/mute, applies no service mode, and leaves Auto off. Incomplete synchronization still prevents activation; attempt/rejection/success events are logged.
 2. Try one small level adjustment on a known active source. Watch the actual desk. The app expects matching readback; it does not treat a successful socket write as confirmation.
 3. Try Undo. It is blocked if the observed desk values changed after that action. Live Undo currently retains one successful adjustment; demo Undo retains its previous history behavior.
 4. Test Speaking, Worship, and Together only after verifying the assignments. These change mutes for configured source roles, not console scenes. In live mode, unassigned inputs and existing FX-return mutes are preserved. Muting operations are sent before unmuting operations.

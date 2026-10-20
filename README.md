@@ -1,5 +1,7 @@
 # Qu-24 Simple Sound
 
+Current Android build: **0.8.1-pilot**. Successful connection now shows **Qu-24 connected — ready to control** with a prominent **Enable control** action in connection settings and on the home screen. Enabling preserves the desk's settings, applies no service mode, and leaves Auto off. Activation attempts and rejections are logged. The October 18 church logs verified discovery and complete state reading; real hardware control/readback and Auto still require supervised testing.
+
 Sunday Sound is a local, landscape-first web interface prototype for a church Allen & Heath Qu-24. Review it on a laptop or an iPad on the same trusted network.
 
 **Android 0.8.0 pilot:** direct Qu-24 connection, Wi-Fi search, bounded channel control, and an explicit Auto balance on/off control are implemented. Auto is experimental meter-based level hold around an operator-approved mix, not listening-based autonomous mixing. It defaults off and requires calibration. See [Auto balance setup and limits](AUTO_BALANCE.md). Tests use local endpoints/simulated mixers on the S23; actual church hardware validation is still required. The browser prototype remains sample-data only.

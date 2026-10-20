@@ -599,3 +599,26 @@
   padding-top: 8px;
   font-variant-numeric: tabular-nums;
 }
+.qu-enable {
+  border: 2px solid var(--assist-mint, #b2ebcd);
+  border-radius: 16px;
+  padding: 18px;
+  margin: 12px 0;
+  background: #203b32;
+  display: grid;
+  gap: 12px;
+  color: #f0f4ef;
+}
+.qu-enable strong {
+  font-size: 20px;
+}
+.qu-enable p,
+.qu-enable small {
+  line-height: 1.5;
+}
+.qu-enable button {
+  width: 100%;
+  min-height: 54px;
+  font-size: 20px;
+  font-weight: 700;
+}

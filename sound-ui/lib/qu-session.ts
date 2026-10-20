@@ -234,6 +234,11 @@ export class QuSession {
     this.supported = supported;
   }
   private publish() {
+    if (this.state.phase === 'readonly' && this.complete())
+      this.state = {
+        ...this.state,
+        message: 'Qu-24 connected — ready to control. Tap Enable control.',
+      };
     this.state = {
       ...this.state,
       observed: { ...this.state.observed },
@@ -390,8 +395,27 @@ export class QuSession {
     );
   }
   enableLive() {
-    if (this.state.phase !== 'readonly' || !this.complete())
-      throw new Error('Need a complete confirmed Qu-24 state first.');
+    logEvent('qu.live.enable-attempt', {
+      phase: this.state.phase,
+      complete: this.complete(),
+      mutes: this.muteCount(),
+      faders: this.faderCount(),
+      busy: this.state.busy,
+    });
+    if (
+      this.state.phase !== 'readonly' ||
+      !this.complete() ||
+      this.state.busy
+    ) {
+      const message =
+        'Control cannot be enabled until a complete Qu-24 state is received and the mixer is idle. Reconnect and read the desk again.';
+      logEvent(
+        'qu.live.enable-rejected',
+        { message, phase: this.state.phase },
+        'error',
+      );
+      throw new Error(message);
+    }
     this.state = {
       ...this.state,
       phase: 'live',
@@ -470,7 +494,7 @@ export class QuSession {
           ...this.state,
           phase: 'readonly',
           message: this.complete()
-            ? 'Qu-24 state received. Read-only.'
+            ? 'Qu-24 connected — ready to control. Tap Enable control.'
             : 'Sync ended with missing input state. Live control stays locked.',
         };
       logEvent('qu.sync.finished', {

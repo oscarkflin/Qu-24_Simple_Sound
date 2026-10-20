@@ -12,6 +12,8 @@ The next delivery target is an Android app tested on a Samsung Galaxy S23. Reuse
 
 ## Product vision
 
+Android 0.8.1 addresses the first church-test usability failure: successful read-only readiness is presented as “Qu-24 connected — ready to control,” not an apparent restriction. A prominent explicit Enable control action appears at the top of connection settings and on the home screen, preserves current desk settings, leaves Auto off, and logs attempts/rejections/success. October 18 logs established complete real-desk state reads, but not successful hardware writes or Auto operation.
+
 Android 0.8.0 adds explicit, default-off Auto balance as an experimental calibrated level-hold pilot. It reads Qu-24 meters, observes a reference for at least ten seconds, requires operator approval, and makes small LR-input-fader corrections within ±3 dB. It excludes silent/inactive sources and stops on stale/invalid feedback, near-clipping, manual input fader/mute changes, app actions or disconnect. It is not room-aware automatic mixing, speech detection, EQ, gain adjustment, or feedback protection. See [current Auto behavior and hardware-validation boundary](AUTO_BALANCE.md); earlier broad roadmap language below remains historical context.
 
 Android 0.7.0 adds bounded Wi-Fi discovery of possible mixer TCP ports, so volunteers normally need not type an IP. This is not Qu-Pad's proprietary UDP discovery. Selection still runs strict Qu-24 identity/state validation before a separate live-enable step. Manual IP remains the fallback for isolated, routed or larger networks. Discovery outcomes join the existing private diagnostic logs. S23 local-endpoint discovery and simulator regression checks passed; church hardware remains unverified.

@@ -1,6 +1,6 @@
 # Android demo — Galaxy S23
 
-The current Android build is **0.8.0-pilot**, package `com.oscarkflin.sundaysound` (launcher name Sunday Sound Demo). The interface opens offline in Demo. Direct Qu-24 TCP control, Wi-Fi search, and experimental calibrated Auto balance are available after the required setup/verification. They have passed local-endpoint/simulated-mixer tests on the S23; the actual church desk remains unverified. Follow [the church pilot guide](QU24_CHURCH_TEST.md) and [Auto balance guide](AUTO_BALANCE.md) for connection, limits, and issue reporting. Room-listening-based automatic mixing and voice activation are not implemented.
+The current Android build is **0.8.1-pilot**, package `com.oscarkflin.sundaysound` (launcher name Sunday Sound Demo). The interface opens offline in Demo. After a complete mixer read, look for **Qu-24 connected — ready to control** and tap **Enable control** at the top of Settings or on Home. Enabling preserves all desk settings and leaves Auto off. Activation attempts/rejections are logged. October 18 church logs verified discovery and complete state reads; real hardware control/readback and Auto remain unverified. Follow [the church pilot guide](QU24_CHURCH_TEST.md) and [Auto balance guide](AUTO_BALANCE.md). Room-listening-based automatic mixing and voice activation are not implemented.
 
 ## Enter your actual patch
 

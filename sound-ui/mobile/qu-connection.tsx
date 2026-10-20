@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { EnableControl } from './enable-control';
 import { Radio, Unplug } from 'lucide-react';
 import { QuSession, type ConnectionState } from '@/lib/qu-session';
 export function QuConnection({
@@ -7,12 +8,14 @@ export function QuConnection({
   zh,
   onDemo,
   onRead,
+  onEnabled,
 }: {
   session: QuSession;
   state: ConnectionState;
   zh: boolean;
   onDemo: () => void;
   onRead: () => void;
+  onEnabled?: () => void;
 }) {
   const [host, setHost] = useState(''),
     [error, setError] = useState('');
@@ -20,6 +23,13 @@ export function QuConnection({
   const [results, setResults] = useState<string[]>([]);
   const [searchMessage, setSearchMessage] = useState('');
   const t = (en: string, cn: string) => (zh ? cn : en);
+  const ready = state.phase === 'readonly' && session.complete();
+  useEffect(() => {
+    if (ready)
+      document
+        .querySelector<HTMLElement>('.assistant-dialog')
+        ?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [ready]);
   const invoke = (fn: () => Promise<void> | void) => {
     setError('');
     Promise.resolve()
@@ -45,6 +55,12 @@ export function QuConnection({
         {t('Qu-24 connection', 'Qu-24 連線')}
       </h3>
       <p role="status">{state.message}</p>
+      <EnableControl
+        session={session}
+        state={state}
+        zh={zh}
+        onEnabled={onEnabled}
+      />
       {state.identity && (
         <p className="assistant-small">
           Qu-24 · {t('Firmware', '韌體')} {state.identity.major}.
@@ -139,23 +155,6 @@ export function QuConnection({
       >
         {t('Connect & read desk', '連線並讀取混音台')}
       </button>
-      {state.phase === 'readonly' && (
-        <>
-          <p className="assistant-small">
-            {t(
-              'Check your saved patch against the desk before enabling live control. Connecting never applies demo settings.',
-              '啟用即時控制前，請先確認已儲存配置與混音台一致。連線不會套用示範設定。',
-            )}
-          </p>
-          <button
-            className="assistant-primary"
-            disabled={!session.complete()}
-            onClick={() => invoke(() => session.enableLive())}
-          >
-            {t('Enable live channel control', '啟用即時通道控制')}
-          </button>
-        </>
-      )}
       {state.phase !== 'demo' && (
         <button
           className="assistant-secondary"

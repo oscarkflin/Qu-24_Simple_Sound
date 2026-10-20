@@ -14,7 +14,11 @@ import {
 import { meterFixture } from './qu-meter-fixtures.mjs';
 import { AutoBalance } from '../lib/auto-balance.ts';
 import { QuSession } from '../lib/qu-session.ts';
+import { getEvents } from '../lib/diagnostics.ts';
 import { initialMix, examplePatch } from '../lib/assistant-model.ts';
+// Minimal browser event/storage surface for verifying persistent diagnostic events.
+globalThis.window = new EventTarget();
+globalThis.localStorage = { getItem: () => null, setItem: () => {} };
 assert.equal(address('ch1'), 0x20);
 assert.equal(address('ch24'), 0x37);
 assert.equal(address('st3'), 0x42);
@@ -154,12 +158,29 @@ async function setup(mock = new MockTransport()) {
 let { session, mock } = await setup();
 assert.equal(session.state.phase, 'readonly');
 assert.equal(session.complete(), true);
+assert.match(session.state.message, /ready to control/i);
 assert.equal(
   mock.sent.length,
   1,
   'Connection must only read state, not apply demo levels',
 );
 session.enableLive();
+assert.equal(
+  mock.sent.length,
+  1,
+  'Enable control must not send mixer settings',
+);
+assert.equal(
+  session.state.automation.mode,
+  'off',
+  'Enable control must leave Auto off',
+);
+assert.equal(
+  getEvents()
+    .filter((e) => e.event === 'qu.live.enable-attempt')
+    .at(-1).details.complete,
+  true,
+);
 let mix = session.observedMix(initialMix(examplePatch));
 const before = structuredClone(mock.board);
 mix = await session.run({ type: 'mode', mode: 'together' }, mix);
@@ -239,6 +260,7 @@ incomplete.missing = true;
 ({ session } = await setup(incomplete));
 assert.equal(session.complete(), false);
 assert.throws(() => session.enableLive());
+assert.ok(getEvents().some((e) => e.event === 'qu.live.enable-rejected'));
 await session.stop();
 const wrong = new MockTransport();
 wrong.model = 1;

@@ -1,4 +1,4 @@
-export const BUILD_ID = 'android-qu-control-0.8.0';
+export const BUILD_ID = 'android-qu-control-0.8.1';
 const KEY = 'sunday-sound.diagnostics.v1';
 export type LogEvent = {
   at: string;

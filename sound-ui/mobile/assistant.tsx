@@ -39,6 +39,7 @@ import {
 import { PatchEditor } from './patch-editor';
 import { QuSession, type ConnectionState } from '@/lib/qu-session';
 import { QuConnection } from './qu-connection';
+import { EnableControl } from './enable-control';
 import { AutoBalanceControl } from './auto-balance';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -101,6 +102,13 @@ export default function SoundAssistant() {
       : '目前使用範例配置，請在選項中設定您的通道。',
   });
   const t = (en: string, cn: string) => (zh ? cn : en);
+  const controlEnabled = () => {
+    setPanel(null);
+    setLast({
+      en: 'Control enabled. The desk’s current settings are unchanged.',
+      zh: '已啟用控制，混音台目前設定保持不變。',
+    });
+  };
   const muted = !!mix.beforeMute;
   const allInputsMuted = mix.channels.every((c) => c.muted);
   const blocked =
@@ -294,9 +302,25 @@ export default function SoundAssistant() {
           : connection.phase === 'live'
             ? t('LIVE · Qu-24 channel control', '即時 · Qu-24 通道控制')
             : connection.phase === 'readonly'
-              ? t('READ ONLY · Qu-24', '唯讀 · Qu-24')
+              ? qu.complete()
+                ? t(
+                    'CONNECTED · Ready to enable control',
+                    '已連線 · 可以啟用控制',
+                  )
+                : t(
+                    'Control unavailable · Check connection',
+                    '無法控制 · 請檢查連線',
+                  )
               : t('Mixer controls paused', '混音器控制已暫停')}
       </div>
+      {panel === null && (
+        <EnableControl
+          session={qu}
+          state={connection}
+          zh={zh}
+          onEnabled={controlEnabled}
+        />
+      )}
       {actionError && (
         <p role="alert" className="patch-error">
           {actionError}
@@ -518,18 +542,34 @@ export default function SoundAssistant() {
                     'Channels that were open will reopen. Channels already muted will stay muted.',
                     '先前開啟的通道將重新開啟，原本靜音的通道會保持靜音。',
                   )
-                : t(
-                    panel === 'patch'
-                      ? 'Enter the actual patch from your Qu-24. Changes stay on this phone.'
-                      : savedPatch
-                        ? 'Offline demo · using your saved patch'
-                        : 'Offline demo · example patch',
-                    panel === 'patch'
-                      ? '輸入 Qu-24 的實際配置，變更將儲存於此手機。'
-                      : savedPatch
-                        ? '離線示範 · 使用已儲存配置'
-                        : '離線示範 · 使用範例配置',
-                  )}
+                : panel === 'patch'
+                  ? t(
+                      'Enter the actual patch from your Qu-24. Changes stay on this phone.',
+                      '輸入 Qu-24 的實際配置，變更將儲存於此手機。',
+                    )
+                  : connection.phase === 'demo'
+                    ? t(
+                        savedPatch
+                          ? 'Offline demo · using your saved patch'
+                          : 'Offline demo · example patch',
+                        savedPatch
+                          ? '離線示範 · 使用已儲存配置'
+                          : '離線示範 · 使用範例配置',
+                      )
+                    : connection.phase === 'live'
+                      ? t(
+                          'Live Qu-24 · control enabled',
+                          '即時 Qu-24 · 已啟用控制',
+                        )
+                      : connection.phase === 'readonly' && qu.complete()
+                        ? t(
+                            'Mixer connected · enable control below',
+                            '混音器已連線 · 請在下方啟用控制',
+                          )
+                        : t(
+                            'Mixer connection · check status below',
+                            '混音器連線 · 請查看下方狀態',
+                          )}
           </DialogDescription>
           {panel === 'patch' && (
             <PatchEditor
@@ -639,6 +679,7 @@ export default function SoundAssistant() {
                 session={qu}
                 state={connection}
                 zh={zh}
+                onEnabled={controlEnabled}
                 onRead={() => {
                   setMix((current) => ({
                     ...current,
